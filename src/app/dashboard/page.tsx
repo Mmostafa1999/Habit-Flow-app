@@ -217,14 +217,7 @@ export default function DashboardPage() {
                         />
                     )}
 
-                    {/* Sidebar - fixed on mobile when open */}
-                    <div
-                        className={`
-              ${isMobileMenuOpen ? 'fixed inset-y-0 left-0 w-64 z-50' : 'hidden'} 
-              md:relative md:flex md:w-60 h-full
-            `}
-                    >
-                    </div>
+                 
 
                     {/* Main Content */}
                     <div className="flex-1 flex flex-col">
