@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add your custom styles below if needed */
+
+:root {
+  --background: #fff0bd;
+  --foreground: #171717;
+  --primary: #e50046;
+  --primary-hover: #b30039;
+  --secondary: #fdab9e;
+  --tertiary: #c7db9c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Nunito", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.success-element {
+  background-color: var(--tertiary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
