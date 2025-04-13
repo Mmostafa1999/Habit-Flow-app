@@ -9,6 +9,8 @@ import { toast } from "react-toastify";
 import PageTransition from "@/components/common/PageTransition";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import usePageLoading from "@/lib/hooks/usePageLoading";
+
+import MobileHeader from "@/components/dashboard/MobileHeader";
 import HabitList from "@/components/dashboard/HabitList";
 import ProgressCircle from "@/components/dashboard/ProgressCircle";
 import CalendarWidget from "@/components/dashboard/CalendarWidget";
@@ -31,6 +33,7 @@ export default function DashboardPage() {
     const { initialLoading } = usePageLoading({ initialDelay: 1000 });
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [completionPercentage, setCompletionPercentage] = useState(0);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [categoriesChangeCounter, setCategoriesChangeCounter] = useState(0);
@@ -56,7 +59,6 @@ export default function DashboardPage() {
     // Add an effect that depends on categoriesChangeCounter to force a refresh
     useEffect(() => {
         if (categoriesChangeCounter > 0) {
-            console.log(`Habits refresh triggered by category changes (${categoriesChangeCounter})`);
             // The actual refresh is handled by useHabits internally
         }
     }, [categoriesChangeCounter]);
@@ -116,17 +118,22 @@ export default function DashboardPage() {
     };
 
     const handleManageCategories = () => {
+        console.log("handleManageCategories called - setting isCategoryModalOpen to true");
         setIsCategoryModalOpen(true);
+        console.log("Current isCategoryModalOpen value:", isCategoryModalOpen);
     };
 
     const handleCategoriesChange = () => {
         // Force reload of habits when categories change
         forceHabitsReload();
-        console.log("Categories changed, triggering habits reload");
     };
 
     const handleDateSelect = (date: Date) => {
         setSelectedDate(date);
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
     if (!user) {
@@ -189,82 +196,101 @@ export default function DashboardPage() {
         };
     });
 
-    console.log("Formatted habits for UI:", formattedHabits);
+    // Debug logs
+    console.log("Dashboard rendering with isCategoryModalOpen:", isCategoryModalOpen);
 
     return (
         <PageTransition>
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Main Content Area - Habits List */}
-                <div className="lg:col-span-8 space-y-6">
-                    {/* Category Filters */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <CategoryFilter
-                            categories={formattedCategories}
-                            selectedCategory={selectedCategory}
-                            onSelectCategory={setSelectedCategory}
-                            onManageCategories={handleManageCategories}
-                        />
-                    </div>
-
-                    {/* Habits List */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Your Habits</h2>
-                            <AddHabitButton
-                                onHabitAdded={forceHabitsReload}
-                                categories={categories}
-                            />
-                        </div>
-
-                        <HabitList
-                            habits={formattedHabits}
-                            onToggleComplete={handleToggleComplete}
-                            selectedDate={selectedDate}
-                        />
-                    </div>
-                </div>
-
-                {/* Sidebar - Stats and Calendar */}
-                <div className="lg:col-span-4 space-y-6">
-                    {/* Today's Progress */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-semibold mb-4">Today's Progress</h3>
-                        <div className="flex justify-center">
-                            <ProgressCircle percentage={completionPercentage} />
-                        </div>
-                        <p className="text-center mt-4 text-sm text-gray-500">
-                            {habits.length > 0
-                                ? `${habits.filter(h => h.completedDates?.some(d => {
-                                    const date = d instanceof Date ? d : d.toDate();
-                                    return isSameDay(date, new Date());
-                                })).length} of ${habits.length} habits completed today`
-                                : "No habits to track yet"}
-                        </p>
-                    </div>
-
-                    {/* Calendar Widget */}
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <h3 className="text-lg font-semibold mb-4">Calendar</h3>
-                        <CalendarWidget
-                            selectedDate={selectedDate}
-                            onSelectDate={handleDateSelect}
-                            completedDates={habits.flatMap(habit =>
-                                (habit.completedDates || []).map(date =>
-                                    date instanceof Date ? date : date.toDate()
-                                )
-                            )}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Category Management Modal */}
-            {isCategoryModalOpen && (
-                <CategoryModal
-                    onClose={() => setIsCategoryModalOpen(false)}
-                    onCategoriesChange={handleCategoriesChange}
+            <div className="min-h-screen bg-[#f8f9ef] flex flex-col">
+                {/* Mobile Header - only visible on small screens */}
+                <MobileHeader
+                    onMenuToggle={toggleMobileMenu}
+                    isMenuOpen={isMobileMenuOpen}
                 />
-            )}
+
+                <div className="flex flex-1 relative">
+                    {/* Mobile Menu Overlay */}
+                    {isMobileMenuOpen && (
+                        <div
+                            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                            onClick={toggleMobileMenu}
+                        />
+                    )}
+
+                    {/* Sidebar - fixed on mobile when open */}
+                    <div
+                        className={`
+              ${isMobileMenuOpen ? 'fixed inset-y-0 left-0 w-64 z-50' : 'hidden'} 
+              md:relative md:flex md:w-60 h-full
+            `}
+                    >
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col">
+                        {/* Desktop Header */}
+                        {/* <DashboardHeader /> */}
+
+                        {/* Dashboard Content */}
+                        <main className="flex-1 p-4 md:p-6 overflow-auto">
+                            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                {/* Main Content Area - Habits List */}
+                                <div className="lg:col-span-8 space-y-6">
+                                    {/* Category Filters */}
+                                    <div className="bg-white rounded-lg shadow p-4">
+                                        <CategoryFilter
+                                            categories={formattedCategories}
+                                            selectedCategory={selectedCategory}
+                                            onSelectCategory={setSelectedCategory}
+                                            onManageCategories={handleManageCategories}
+                                        />
+                                    </div>
+
+                                    {/* Habits List */}
+                                    <div className="bg-white rounded-lg shadow p-4">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="font-semibold">Habits</h3>
+                                            <AddHabitButton buttonText="Create New Habit" />
+                                        </div>
+                                        <HabitList
+                                            habits={formattedHabits}
+                                            selectedDate={selectedDate}
+                                            onToggleComplete={handleToggleComplete}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Right Sidebar */}
+                                <div className="lg:col-span-4 space-y-6">
+                                    {/* Today's Progress */}
+                                    <div className="bg-white rounded-lg shadow p-4">
+                                        <h3 className="font-semibold mb-4">Today&apos;s Progress</h3>
+                                        <ProgressCircle
+                                            percentage={completionPercentage}
+                                            label="of habits completed"
+                                        />
+                                    </div>
+
+                                    {/* Calendar */}
+                                    <div className="bg-white rounded-lg shadow p-4">
+                                        <CalendarWidget onDateSelect={handleDateSelect} />
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+
+                {/* Category Management Modal */}
+                <CategoryModal
+                    isOpen={isCategoryModalOpen}
+                    onClose={() => {
+                        console.log("Modal close called");
+                        setIsCategoryModalOpen(false);
+                    }}
+                    onCategoryChange={handleCategoriesChange}
+                />
+            </div>
         </PageTransition>
     );
-} 
+}
